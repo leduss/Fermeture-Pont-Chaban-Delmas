@@ -5,7 +5,7 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import Popup from "@/components/Popup";
 
-const ChronoBoat = ({data, currentBoat, boat, setCurrentBoat}) => {
+const ChronoBoat = ({data, currentBoat, setCurrentBoat}) => {
     const [popup, setPopup] = useState(false);
     const years = new Date().getFullYear();
     const months = new Date().getMonth();
@@ -17,24 +17,25 @@ const ChronoBoat = ({data, currentBoat, boat, setCurrentBoat}) => {
     const [minutes, setMinutes] = useState(0);
     const [hours, setHours] = useState(0);
     const [days, setDays] = useState(0);
-    const date = new Date(boat["fields"]["date_passage"]).getTime();
+    const date = currentBoat && new Date(currentBoat["fields"]["date_passage"]).getTime();
     const now = new Date().getTime();
     const hoursSaison = new Date().getTimezoneOffset() * 60 * 1000;
-    const hourClose = boat["fields"]["fermeture_a_la_circulation"];
-    const hourClose2 = hourClose.substring(0, 2);
+    const hourClose = currentBoat && currentBoat["fields"]["fermeture_a_la_circulation"];
+    const hourClose2 = hourClose && hourClose.substring(0, 2);
     const hourClose3 = hourClose2 * 60 * 60 * 1000;
-    const hourClose4 = hourClose.substring(6, 3);
+    const hourClose4 = hourClose && hourClose.substring(6, 3);
     const hourClose5 = hourClose4 * 60 * 1000;
     const hourClose6 = (hourClose3 + hourClose5 + date) + hoursSaison;
     const hourClose7 = new Date(hourClose6).toLocaleTimeString("fr-FR", {weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"});
-    const hourOpen = boat["fields"]["re_ouverture_a_la_circulation"];
-    const hourOpen2 = hourOpen.substring(0, 2);
+    const hourOpen = currentBoat &&currentBoat["fields"]["re_ouverture_a_la_circulation"];
+    const hourOpen2 = hourOpen && hourOpen.substring(0, 2);
     const hourOpen3 = hourOpen2 * 60 * 60 * 1000;
-    const hourOpen4 = hourOpen.substring(6, 3);
+    const hourOpen4 = hourOpen && hourOpen.substring(6, 3);
     const hourOpen5 = hourOpen4 * 60 * 1000;
     const hourOpen6 = (hourOpen3 + hourOpen5 + date) - (60 * 60 * 1000);
     const diff = hourClose6 - now;
     let timer;
+
     useEffect(() => {
         timer = setInterval(() => {
             let seconds = Math.floor(diff / 1000);
@@ -50,6 +51,8 @@ const ChronoBoat = ({data, currentBoat, boat, setCurrentBoat}) => {
             setDays(days);
         }, 1000);
         return () => clearInterval(timer);
+
+
     }, [diff]);
     useEffect(() => {
         if (diff < 0) {
@@ -61,9 +64,10 @@ const ChronoBoat = ({data, currentBoat, boat, setCurrentBoat}) => {
         } else {
             setText("Le pont est ouvert");
         }
-        if (diff < 0 && currentBoat === data.length - 1) {
-            setCurrentBoat(0);
+        if (diff < 0 ) {
+            setCurrentBoat(null);
             setText("Aucune fermeture prévue");
+            timer = null;
         }
     }, [diff, currentBoat, data.length, timer, hourClose6, hourOpen6, setCurrentBoat]);
 
@@ -79,7 +83,7 @@ const ChronoBoat = ({data, currentBoat, boat, setCurrentBoat}) => {
                 </div>
                 <div className="w-1/2 flex flex-col items-center text-white text-3xl font-bold">
                 <p className=" font-bold mb-4">Prochaine fermeture:</p>
-                    <p>{boat["fields"]["bateau"] === "MAINTENANCE" ? "" : "Nom du bateau:"} <span className="text-red-500 text-5xl font-black">{boat["fields"]["bateau"] === "MAINTENANCE" ? "Travaux de maintenance du pont" : data[currentBoat]["fields"]["bateau"]}</span></p>
+                    <p>{currentBoat &&currentBoat["fields"]["bateau"] === "MAINTENANCE" ? "" : "Nom du bateau:"} <span className="text-red-500 text-5xl font-black">{currentBoat && currentBoat["fields"]["bateau"] === "MAINTENANCE" ? "Travaux de maintenance du pont" : currentBoat["fields"]["bateau"]}</span></p>
                 <p>Date: {hourClose7}</p>
                 </div>
 
